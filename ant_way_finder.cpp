@@ -10,7 +10,7 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-//#define PARALLEL
+#define PARALLEL
 
 inline void print_way(const std::vector < edge >& way) {
 	std::cout << "way weight = " << std::accumulate(way.begin(), way.end(), 0.0,

@@ -37,7 +37,7 @@ bool ant_dfs(int v, const graph& gr, const int finish, Ant::way& out_way, std::v
 	}
 	std::vector < double > probabilities(gr.get_edges_from_vertex(v).size());
 	for (size_t i = 0; i < probabilities.size(); ++i) {
-		probabilities[i] = std::pow(gr.get_edges_from_vertex(v)[i].weight, greedy) +
+		probabilities[i] = std::pow(gr.get_edges_from_vertex(v)[i].weight, greedy) *
 			std::pow(gr.get_sweetness(gr.get_edges_from_vertex(v)[i].index), sweet_tooth);
 	}
 	double sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.0);
@@ -86,42 +86,6 @@ bool sweet_tooth_ant(const graph& gr, const int start, const int finish, Ant::wa
 	std::vector < bool > visited(gr.size(), false);
 	return sweet_dfs(start, gr, finish, out_way, visited);
 }
-
-/*
-Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const double sweet_tooth,
-	int &total_viewed, std::vector < bool > &visited, int cnt_visited, std::vector < edge > &out_way,
-	const double randomness) {
-	
-	const int BIT_RND = 16, MAX_DEPTH = v * 3;
-	if (cnt_visited == gr.size()) {
-		return Comv_res::FOUND;
-	}
-	cnt_visited += !visited[v];
-	visited[v] = true;
-	if (++total_viewed >= MAX_DEPTH) {
-		return Comv_res::TOO_LONG_SEARCH;
-	}
-	
-	std::random_device rd;
-	std::mt19937 gen(rd());
-	if (std::generate_canonical<double, BIT_RND>(gen) < randomness) {
-		const int unvisited = std::count_if(visited.begin(), visited.end(), [](const bool b) { return !b; }):
-		std::uniform_int_distribution<> dis(1, unvisited);
-		size_t next_end_ind = dis(gen), next_end;
-		for (size_t i = 0; i < visited.size() && !visited[i] && --next_end_ind; ++i) {
-			next_end_ind = i + 1;
-		}
-		std::vector < edge > cur_way;
-		find_any_way(gr, v, next_end_ind, cur_way);
-		for (const edge& e : cur_way) {
-			out_way.push_back(e);
-		}
-		cur_way.clear();
-		cur_way.shrink_to_fit();
-		Comv_res
-	}
-}
-*/
 
 Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const double sweet_tooth,
 	size_t &total_viewed, const size_t operation_limit, std::vector < int > &visited,
@@ -190,22 +154,10 @@ Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const doubl
 				out_way.pop_back();
 			}
 		}
-		/*
-		to = dis(gen);
-		out_way.push_back(gr.get_edges_from_vertex(v)[to]);
-		Comv_res res;
-		if ((res = comv_dfs(gr.get_edges_from_vertex(v)[to].get_end(v), gr, greedy, sweet_tooth, total_viewed,
-			operation_limit, visited, cnt_visited, deep, out_way, randomness)) == Comv_res::FOUND) {
-			return Comv_res::FOUND;
-		}
-		if (res == Comv_res::TOO_LONG_SEARCH) {
-			return Comv_res::TOO_LONG_SEARCH;
-		}
-		*/
 	}
 	std::vector < double > probabilities(gr.get_edges_from_vertex(v).size());
 	for (size_t i = 0; i < probabilities.size(); ++i) {
-		probabilities[i] = std::pow(gr.get_edges_from_vertex(v)[i].weight, greedy) +
+		probabilities[i] = std::pow(gr.get_edges_from_vertex(v)[i].weight, greedy) *
 			std::pow(gr.get_sweetness(gr.get_edges_from_vertex(v)[i].index), sweet_tooth);
 	}
 	double sum = std::accumulate(probabilities.begin(), probabilities.end(), 0.0);
