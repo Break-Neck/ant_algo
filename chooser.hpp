@@ -35,9 +35,10 @@ public:
 		std::random_device rd;
 		std::mt19937 gen(rd());
 		for (int i = 0; begin != end; ++begin, ++i) {
-			if (*begin > 0)
+			if (*begin > 0) {
 				root = add(root, new item(*begin, std::generate_canonical<double, BIT_RND>(gen),
 					i));
+			}
 		}
 	}
 	~chooser() {

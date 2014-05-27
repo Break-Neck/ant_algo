@@ -12,6 +12,7 @@ struct edge {
 	edge(int from, int to, int index, double weight = 1.0) : from(from), to(to), index(index), weight(weight) {}
 	const int get_end(const int vertex) const { assert(vertex == from || vertex == to);
 		return vertex == from ? to : from; }
+	const std::pair< size_t, size_t > get_ends() const { return std::make_pair(from, to); }
 };
 
 class graph {
@@ -40,6 +41,7 @@ public:
 		std::for_each(sweetness.begin(), sweetness.end(),
 			[delta_mul](double& val) { val *= delta_mul; });
 	}
+	size_t get_number_of_edges() const { return sweetness.size(); }
 };
 
 #endif

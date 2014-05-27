@@ -87,36 +87,121 @@ bool sweet_tooth_ant(const graph& gr, const int start, const int finish, Ant::wa
 	return sweet_dfs(start, gr, finish, out_way, visited);
 }
 
+/*
 Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const double sweet_tooth,
 	int &total_viewed, std::vector < bool > &visited, int cnt_visited, std::vector < edge > &out_way,
 	const double randomness) {
-
-	const int BIT_RND = 16;
-	if (static_cast<std::int64_t>(v) * v <= total_viewed) {
-		return Comv_res::TO_LONG_SEARCH;
-	}
-	if (std::all_of(visited.begin(), visited.end(), [](const bool b) { return b; })) {
+	
+	const int BIT_RND = 16, MAX_DEPTH = v * 3;
+	if (cnt_visited == gr.size()) {
 		return Comv_res::FOUND;
 	}
 	cnt_visited += !visited[v];
 	visited[v] = true;
-	++total_viewed;
+	if (++total_viewed >= MAX_DEPTH) {
+		return Comv_res::TOO_LONG_SEARCH;
+	}
+	
 	std::random_device rd;
 	std::mt19937 gen(rd());
-	int to = -1; 
-	if (std::generate_canonical<double, BIT_RND>(gen) < randomness) { // while there is life there is hope
-		std::uniform_int_distribution<> dis(0, gr.get_edges_from_vertex(v).size() - 1);
+	if (std::generate_canonical<double, BIT_RND>(gen) < randomness) {
+		const int unvisited = std::count_if(visited.begin(), visited.end(), [](const bool b) { return !b; }):
+		std::uniform_int_distribution<> dis(1, unvisited);
+		size_t next_end_ind = dis(gen), next_end;
+		for (size_t i = 0; i < visited.size() && !visited[i] && --next_end_ind; ++i) {
+			next_end_ind = i + 1;
+		}
+		std::vector < edge > cur_way;
+		find_any_way(gr, v, next_end_ind, cur_way);
+		for (const edge& e : cur_way) {
+			out_way.push_back(e);
+		}
+		cur_way.clear();
+		cur_way.shrink_to_fit();
+		Comv_res
+	}
+}
+*/
+
+Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const double sweet_tooth,
+	size_t &total_viewed, const size_t operation_limit, std::vector < int > &visited,
+	size_t &cnt_visited, int deep, std::vector < edge > &out_way, const double randomness) {
+
+	const int BIT_RND = 16;
+	if (++deep * 10LL >= gr.size() * 21LL) {
+		return Comv_res::NOT_YET;
+	}
+	if (++total_viewed >= operation_limit) {
+		return Comv_res::TOO_LONG_SEARCH;
+	}
+	cnt_visited += !visited[v];
+	++visited[v];
+	if (cnt_visited >= static_cast<size_t>(gr.size())) {
+		return Comv_res::FOUND;
+	}
+	assert( std::count(visited.begin(), visited.end(), true) < gr.size() );
+	std::random_device rd;
+	std::mt19937 gen(rd());
+	if (std::generate_canonical<double, BIT_RND>(gen) < randomness) {
+		const size_t unvisited = std::count(visited.begin(), visited.end(), 0);
+		std::uniform_int_distribution<> dis(1, unvisited);
+		size_t next_vert_ind = dis(gen);
+		size_t next_vert;
+		for (size_t i = 0; next_vert_ind; ++i) {
+			if (!visited[i]) {
+				--next_vert_ind;
+			}
+			next_vert = i;
+		}
+		std::vector < edge > cur_way;
+		find_any_way(gr, v, next_vert, cur_way);
+		const size_t new_edges = cur_way.size();
+		if ((new_edges - 1 + deep) * 10LL < gr.size() * 21LL) {
+			size_t cur_v = v;
+			for (const edge& e : cur_way) {
+				if (cur_v != v) {
+					if (!visited[cur_v]) {
+						++cnt_visited;
+					}
+					++visited[cur_v];
+				}
+				cur_v = e.get_end(cur_v);
+				out_way.push_back(e);
+			}
+			cur_way.clear();
+			cur_way.shrink_to_fit();
+			Comv_res res;
+			total_viewed += new_edges - 1;
+			if ((res = comv_dfs(next_vert, gr, greedy, sweet_tooth, total_viewed, operation_limit, visited,
+				cnt_visited, deep + new_edges - 1, out_way, randomness)) == Comv_res::FOUND) {
+				return Comv_res::FOUND;
+			}
+			if (res == Comv_res::TOO_LONG_SEARCH) {
+				return Comv_res::TOO_LONG_SEARCH;
+			}
+			cur_v = next_vert;
+			for (size_t i = 0; i < new_edges; ++i) {
+				if (cur_v != next_vert) {
+					if (!(--visited[cur_v])) {
+						--cnt_visited;
+					}
+				}
+				cur_v = out_way.back().get_end(cur_v);
+				out_way.pop_back();
+			}
+		}
+		/*
 		to = dis(gen);
 		out_way.push_back(gr.get_edges_from_vertex(v)[to]);
 		Comv_res res;
 		if ((res = comv_dfs(gr.get_edges_from_vertex(v)[to].get_end(v), gr, greedy, sweet_tooth, total_viewed,
-			visited, cnt_visited, out_way, randomness)) == Comv_res::FOUND) {
+			operation_limit, visited, cnt_visited, deep, out_way, randomness)) == Comv_res::FOUND) {
 			return Comv_res::FOUND;
 		}
-		out_way.pop_back();
-		if (res == Comv_res::TO_LONG_SEARCH) {
-			return Comv_res::TO_LONG_SEARCH;
+		if (res == Comv_res::TOO_LONG_SEARCH) {
+			return Comv_res::TOO_LONG_SEARCH;
 		}
+		*/
 	}
 	std::vector < double > probabilities(gr.get_edges_from_vertex(v).size());
 	for (size_t i = 0; i < probabilities.size(); ++i) {
@@ -128,21 +213,96 @@ Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const doubl
 	chooser current_edges(probabilities.begin(), probabilities.end());
 	while (!current_edges.empty()) {
 		int next_edge_index = current_edges.get_next_index();
-		if (next_edge_index == to) {
-			continue;
-		}
 		const edge& next_edge = gr.get_edges_from_vertex(v)[next_edge_index];
 		out_way.push_back(next_edge);
 		Comv_res res;
 		if ((res = comv_dfs(next_edge.get_end(v), gr, greedy, sweet_tooth, total_viewed,
-			visited, cnt_visited, out_way, randomness)) == Comv_res::FOUND ) {
+			operation_limit, visited, cnt_visited, deep, out_way, randomness)) == Comv_res::FOUND ) {
 			return Comv_res::FOUND;
 		}
+		if (res == Comv_res::TOO_LONG_SEARCH) {
+			return Comv_res::TOO_LONG_SEARCH;
+		}
 		out_way.pop_back();
-		if (res == Comv_res::TO_LONG_SEARCH) {
-			return Comv_res::TO_LONG_SEARCH;
+	}
+	if (!(--visited[v])) {
+		--cnt_visited;
+	}
+	assert(visited[v] >= 0);
+	return Comv_res::NOT_YET;
+}
+
+bool find_any_way(const graph& gr, const int start, const int end, std::vector < edge > &out_way) {
+	std::queue < int > q;
+	std::vector < bool > visited(gr.size(), false);
+	std::vector < edge > edge_from(gr.size(), edge(-1, -1, -1, -1));
+	q.push(start);
+	visited[start] = true;
+	while (!q.empty()) {
+		int cur_v = q.front();
+		q.pop();
+		if (cur_v == end) {
+			break;
+		}
+		for (const edge& e : gr.get_edges_from_vertex(cur_v)) {
+			if (visited[e.get_end(cur_v)]) {
+				continue;
+			}
+			visited[e.get_end(cur_v)] = true;
+			q.push(e.get_end(cur_v));
+			edge_from[e.get_end(cur_v)] = e;
 		}
 	}
-	return Comv_res::NOT_YET;
+	out_way.clear();
+	if (!visited[end]) {
+		return false;
+	}
+	int cur_v = end;
+	while (cur_v != start) {
+		out_way.push_back(edge_from[cur_v]);
+		cur_v = edge_from[cur_v].get_end(cur_v);
+	}
+	std::reverse(out_way.begin(), out_way.end());
+	return true;
+}
+
+bool random_seller(const graph& gr, const int start, const int finish /*nobody cares */, Ant::way& out_way) {
+	std::vector < int > verts(gr.size());
+	for (size_t i = 0; i < verts.size(); ++i) {
+		verts[i] = i;
+	}
+	std::random_shuffle(verts.begin(), verts.end()); //May be improved with std::shuffle
+	std::vector < bool > visited(gr.size(), false);
+	visited[start] = true;
+	int number_of_visited = 1;
+	int cur_v = start;
+	std::vector < edge > cur_way;
+	out_way.clear();
+	for (size_t i = 0; i < verts.size(); ++i) {
+		const int to = verts[i];
+		if (to == start) {
+			continue;
+		}
+		cur_way.clear();
+		if (!find_any_way(gr, cur_v, to, cur_way)) {
+			return false;
+		}
+		for (const edge& e : cur_way) {
+			if (!visited[e.get_end(cur_v)]) {
+				++number_of_visited;
+				visited[e.get_end(cur_v)] = true;
+			}
+			cur_v = e.get_end(cur_v);
+			out_way.push_back(e);
+			if (number_of_visited == gr.size()) {
+				break;
+			}
+		}
+		if (number_of_visited == gr.size()) {
+			return true;
+		}
+	}
+	assert(number_of_visited == gr.size());
+	return false;
 }
 
