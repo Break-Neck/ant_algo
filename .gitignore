@@ -1,9 +1,8 @@
 *.[oa]
+out
 *.~
 *.swp
-dejkstra
 *.txt
 test*
-ut_chooser*
-*.pdf
 tex/
+update_latex.sh

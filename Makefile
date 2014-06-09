@@ -1,20 +1,34 @@
-test: build
-	./test < input1.txt
+all: out/seller out/ant_way_finder
 
-build: test.o ant.o chooser.o
-	c++ --std=c++11 test.o ant.o chooser.o -pthread -lboost_program_options -o test 
+out/seller: out/seller.o out/ant.o out/chooser.o
+	mkdir out -p
+	c++ --std=c++11 out/seller.o out/ant.o out/chooser.o -pthread -lboost_program_options -o out/seller
 
-test.o:	test.cpp graph.hpp ant.hpp
-	c++ --std=c++11 test.cpp -Wall -pthread -c 
+out/ant_way_finder: out/ant_way_finder.o out/ant.o out/chooser.o 
+	mkdir out -p
+	c++ --std=c++11 out/ant_way_finder.o out/ant.o out/chooser.o -pthread -lboost_program_options -o out/ant_way_finder
 
-ant.o: ant.cpp graph.hpp ant.hpp chooser.hpp
-	c++ --std=c++11 ant.cpp -c -Wall 
+out/ant_way_finder.o: ant_way_finder.cpp graph.hpp ant.hpp 
+	mkdir out -p
+	c++ --std=c++11 ant_way_finder.cpp -c -pthread -o out/ant_way_finder.o
 
-chooser.o: chooser.cpp chooser.hpp
-	c++ --std=c++11 chooser.cpp -c -Wall 
+out/seller.o: seller.cpp graph.hpp ant.hpp 
+	mkdir out -p
+	c++ --std=c++11 seller.cpp -pthread -c -o out/seller.o
 
-dejkstra: graph.hpp dejkstra.cpp
-	c++ --std=c++11 dejkstra.cpp -Wall -o dejkstra 
+out/ant.o: ant.cpp graph.hpp ant.hpp chooser.hpp 
+	mkdir out -p
+	c++ --std=c++11 ant.cpp -c -o out/ant.o
 
-clean:
-	rm *.o dejkstra test ut_chooser
+out/chooser.o: chooser.cpp chooser.hpp 
+	mkdir out -p
+	c++ --std=c++11 chooser.cpp -c -o out/chooser.o
+
+dejkstra: out/dejkstra
+
+out/dejkstra: graph.hpp dejkstra.cpp 
+	mkdir out -p
+	c++ --std=c++11 dejkstra.cpp -o out/dejkstra 
+
+clean: 
+	rm out -r
