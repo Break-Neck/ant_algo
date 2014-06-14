@@ -28,7 +28,7 @@ dejkstra: out/dejkstra
 
 out/dejkstra: graph.hpp dejkstra.cpp 
 	mkdir out -p
-	c++ --std=c++11 dejkstra.cpp -o out/dejkstra -O3 -DNDEBUG -DANT_PARALLEL
+	c++ --std=c++11 dejkstra.cpp -o out/dejkstra -O3 -DNDEBUG
 
 clean: 
 	rm out -r
