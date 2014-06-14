@@ -6,11 +6,11 @@
 #include <cmath>
 #include <thread>
 #include <future>
+#include <algorithm>
+#include <ctime>
 
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
-
-#define PARALLEL
 
 inline void print_way(const std::vector < edge >& way) {
 	std::cout << "way weight = " << std::accumulate(way.begin(), way.end(), 0.0,
@@ -38,19 +38,20 @@ void print_graph_edges(const graph& gr) {
 	}
 }
 
-	const int DEF_WORKING_ANTS = 20;
-	const int DEF_STEPS = 100;
-	const double DEF_SWEETNESS_DECREASING = 0.1;
-	const double DEF_ADD_PARAM = 1.0;
-	const int DEF_GREEDY_NUM = -1;
-	const int DEF_GREEDY_DENOM = 1;
-	const int DEF_SWEET_TOOTH_NUM = 1;
-	const int DEF_SWEET_TOOTH_DENUM = 1;
+const int DEF_GREEDY_NUM = -1;
+const int DEF_GREEDY_DENOM = 1;
+const int DEF_SWEET_TOOTH_NUM = 1;
+const int DEF_SWEET_TOOTH_DENUM = 1;
 
 inline void command_line_parsing(int argc, char** argv, size_t &ants, size_t& steps, double &sweetness_decreasing,
 	double &add_param, bool &verbose, int &greedy_num, int &greedy_denom, int &sweet_tooth_num,
 	int &sweet_tooth_denom) {
 	
+	const int DEF_WORKING_ANTS = 20;
+	const int DEF_STEPS = 100;
+	const double DEF_SWEETNESS_DECREASING = 0.1;
+	const double DEF_ADD_PARAM = 1.0;
+
 	po::options_description desc("Allowed options:");
 	desc.add_options()
 		("help,h", "produce help message")
@@ -60,11 +61,15 @@ inline void command_line_parsing(int argc, char** argv, size_t &ants, size_t& st
 		("sweetdec", po::value<double>(&sweetness_decreasing)->default_value(DEF_SWEETNESS_DECREASING),
 			"percent of sweetness decreasing")
 		("addp", po::value<double>(&add_param)->default_value(DEF_ADD_PARAM), "adding coefficient")
+		/*
+		These parameters are set in compile time:
+
 		("greednum", po::value<int>(&greedy_num)->default_value(DEF_GREEDY_NUM), "numerator of greed (must be negative!)")
 		("greeddenom", po::value<int>(&greedy_denom)->default_value(DEF_GREEDY_DENOM), "denominator of greed")
 		("sweetnum", po::value<int>(&sweet_tooth_num)->default_value(DEF_SWEET_TOOTH_NUM), "numirator of sweet toothing")
 		("sweetdenom", po::value<int>(&sweet_tooth_denom)->default_value(DEF_SWEET_TOOTH_DENUM),
 			"denominator of sweet toothing")
+		*/
 		;
 	po::variables_map vm;
 	po::store(po::parse_command_line(argc, argv, desc), vm);
@@ -80,7 +85,6 @@ inline void command_line_parsing(int argc, char** argv, size_t &ants, size_t& st
 }
 
 int main(int argc, char** argv) {
-	
 	size_t ants, steps;
 	double sweetness_decreasing, add_param;
 	bool verbose = false;
@@ -88,6 +92,7 @@ int main(int argc, char** argv) {
 	command_line_parsing(argc, argv, ants, steps, sweetness_decreasing, add_param, verbose, greedy_num,
 		greedy_denom, sweet_tooth_num, sweet_tooth_denom);
 	int n, m, start, finish;
+	srand(time(NULL));
 	std::cin >> n >> m >> start >> finish;
 	std::vector < edge > edges(m);
 	for (int i = 0; i < m; ++i) {
@@ -99,7 +104,7 @@ int main(int argc, char** argv) {
 	std::vector< Ant > workers(ants, Ant(go_ant<-1, 1, 1, 1>));
 	std::vector < bool > results(ants);
 	for (size_t step = 0; step < steps; ++step) {
-#ifndef PARALLEL
+#ifndef ANT_PARALLEL
 		for (size_t i = 0; i < ants; ++i) {
 			results[i] = workers[i].start(gr, start - 1, finish - 1);
 		}

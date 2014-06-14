@@ -10,8 +10,6 @@
 #include <boost/program_options.hpp>
 namespace po = boost::program_options;
 
-#define PARALLEL
-
 inline void print_way(const std::vector < edge >& way) {
 	std::cout << "way weight = " << std::accumulate(way.begin(), way.end(), 0.0,
 		[&](const double old, const edge& e) { return old + e.weight; }) << std::endl;
@@ -38,6 +36,11 @@ void print_graph_edges(const graph& gr) {
 	}
 }
 
+const int DEF_GREEDY_NUM = -1;
+const int DEF_GREEDY_DENOM = 1;
+const int DEF_SWEET_TOOTH_NUM = 1;
+const int DEF_SWEET_TOOTH_DENUM = 1;
+
 inline void command_line_parsing(int argc, char** argv, size_t &ants, size_t& steps, double &sweetness_decreasing,
 	double &add_param, bool &verbose, int &greedy_num, int &greedy_denom, int &sweet_tooth_num,
 	int &sweet_tooth_denom) {
@@ -46,10 +49,6 @@ inline void command_line_parsing(int argc, char** argv, size_t &ants, size_t& st
 	const int DEF_STEPS = 100;
 	const double DEF_SWEETNESS_DECREASING = 0.1;
 	const double DEF_ADD_PARAM = 1.0;
-	const int DEF_GREEDY_NUM = -1;
-	const int DEF_GREEDY_DENOM = 1;
-	const int DEF_SWEET_TOOTH_NUM = 1;
-	const int DEF_SWEET_TOOTH_DENUM = 1;
 
 	po::options_description desc("Allowed options:");
 	desc.add_options()
@@ -89,7 +88,7 @@ void start_first_sellers(graph& gr, const size_t ants, const int start, const bo
 	std::vector < Ant > sellers(ants, Ant(random_seller));
 	std::vector < bool > results(ants);
 
-#ifdef PARALLEL
+#ifdef ANT_PARALLEL
 	std::vector < std::future<bool> > fut_results(ants);
 	for (size_t i = 0; i < ants; ++i) {
 		fut_results[i] = std::async(std::launch::async,
@@ -153,7 +152,7 @@ int main(int argc, char** argv) {
 	std::vector < edge > best_way;
 	for (size_t step = 0; step < steps + 1; ++step) {
 		int good_ways = 0;
-#ifndef PARALLEL
+#ifndef ANT_PARALLEL
 		for (size_t i = 0; i < ants; ++i) {
 			results[i] = sellers[i].start(gr, start - 1, start - 1);
 		}

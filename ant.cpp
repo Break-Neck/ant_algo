@@ -110,7 +110,7 @@ Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const doubl
 		const size_t unvisited = std::count(visited.begin(), visited.end(), 0);
 		std::uniform_int_distribution<> dis(1, unvisited);
 		size_t next_vert_ind = dis(gen);
-		size_t next_vert;
+		size_t next_vert = 0;
 		for (size_t i = 0; next_vert_ind; ++i) {
 			if (!visited[i]) {
 				--next_vert_ind;
@@ -123,7 +123,7 @@ Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const doubl
 		if ((new_edges - 1 + deep) * 10LL < gr.size() * 21LL) {
 			size_t cur_v = v;
 			for (const edge& e : cur_way) {
-				if (cur_v != v) {
+				if (cur_v != static_cast<size_t>(v)) {
 					if (!visited[cur_v]) {
 						++cnt_visited;
 					}
@@ -145,7 +145,7 @@ Comv_res comv_dfs(const int v, const graph& gr, const double greedy, const doubl
 			}
 			cur_v = next_vert;
 			for (size_t i = 0; i < new_edges; ++i) {
-				if (cur_v != next_vert) {
+				if (cur_v != static_cast<size_t>(next_vert)) {
 					if (!(--visited[cur_v])) {
 						--cnt_visited;
 					}
